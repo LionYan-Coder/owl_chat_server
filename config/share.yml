@@ -1,0 +1,20 @@
+env: zookeeper
+rpcRegisterName:
+  chat: chat
+  admin: admin
+
+openIM:
+  # OpenIM API address
+  apiURL: http://127.0.0.1:10002
+  # OpenIM secret key, must be consistent with OpenIM
+  secret: owlIM123
+  # OpenIM administrator userID, must be consistent with OpenIM
+  adminUserID: imAdmin
+
+chatAdmin:
+   # Default username and password for the admin
+  - "chatAdmin"
+
+redPacket:
+  apiURL: http://127.0.0.1:10086/v1
+  timeout: 20

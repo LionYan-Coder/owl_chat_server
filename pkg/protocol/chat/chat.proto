@@ -1,0 +1,432 @@
+// Copyright © 2023 OpenIM open source community. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+package openim.chat;
+
+import "common/common.proto";
+import "sdkwss/sdkwss.proto";
+import "wrapperspb/wrapperspb.proto";
+
+option go_package = "github.com/openimsdk/chat/pkg/protocol/chat";
+
+message onlineTime {
+  string userID = 1;
+  int64 timestamp = 3;
+}
+
+message getUsersTimeReq {
+  repeated string userIDs = 2;
+}
+
+message getUsersTimeResp{
+  repeated onlineTime timeList = 1;
+}
+
+
+message UserIdentity {
+  string address = 1;
+  string deviceID = 2;
+  int32 platform = 3;
+  string account = 4;
+}
+
+message UpdateUserInfoReq {
+  string userID = 1;
+  openim.protobuf.StringValue account = 2;
+  openim.protobuf.StringValue nickname = 3;
+  openim.protobuf.StringValue faceURL = 4;
+  openim.protobuf.StringValue coverURL = 5;
+  openim.protobuf.StringValue about = 6;
+  openim.protobuf.Int32Value allowAddFriend = 7;
+  openim.protobuf.Int32Value allowBeep = 8;
+  openim.protobuf.Int32Value allowVibration = 9;
+  openim.protobuf.Int32Value globalRecvMsgOpt = 10;
+  openim.protobuf.Int32Value RegisterType = 11;
+}
+
+message UpdateUserInfoResp {
+  string account = 1;
+  string nickName = 2;
+  openim.protobuf.StringValue faceURL = 3;
+  openim.protobuf.StringValue coverURL = 4;
+  openim.protobuf.StringValue about = 5;
+}
+
+message FindUserPublicInfoReq {
+  repeated string userIDs = 1;
+}
+
+message FindUserPublicInfoRespOfOne {
+  openim.common.UserPublicInfo user = 1;
+}
+
+message FindUserPublicInfoResp {
+  repeated openim.common.UserPublicInfo users = 1;
+}
+
+message SearchUserPublicInfoReq {
+  string keyword = 1;
+  openim.sdkwss.RequestPagination pagination = 2;
+  int32 genders = 3;
+}
+
+message SearchUserPublicInfoResp {
+  uint32 total = 1;
+  repeated openim.common.UserPublicInfo users = 2;
+}
+
+message FindUserFullInfoReq {
+  repeated string userIDs = 1;
+}
+
+message FindUserFullInfoResp {
+  repeated openim.common.UserFullInfo users = 1;
+}
+
+message GetAllUserIDsReq {
+}
+
+message GetAllUserIDsResp {
+  repeated string userIDs = 1;
+}
+
+message SendVerifyCodeReq {
+  int32 usedFor = 1;
+  string ip = 2;
+  string invitationCode = 3;
+  string deviceID = 4;
+  int32 platform = 5;
+  string areaCode = 6;
+  string phoneNumber = 7;
+  string email = 8;
+}
+
+message SendVerifyCodeResp {}
+
+message VerifyCodeReq {
+  string areaCode = 1;
+  string phoneNumber = 2;
+  string verifyCode = 3;
+  string email = 4;
+}
+
+message VerifyCodeResp {}
+
+message ChallengeNonceReq {
+  string publicKey = 1;
+}
+
+message ChallengeNonceResp {
+  string nonce = 1;
+}
+
+message RegisterUserInfo {
+  string userID = 1;
+  string nickname = 2;
+  string faceURL = 3;
+  string account = 4;
+  string publicKey = 5;
+  string Address = 6;
+  int32 RegisterType = 7;
+}
+
+message RegisterUserReq {
+  string nonce = 6;
+  string signature = 7;
+  string ip = 1;
+  string deviceID = 2;
+  int32 platform = 3;
+  bool autoLogin = 4;
+  RegisterUserInfo user = 5;
+}
+
+message RegisterUserResp {
+  string userID = 1;
+  string chatToken = 3;
+}
+
+message AddUserAccountReq {
+  string ip = 1;
+  string deviceID = 2;
+  int32 platform = 3;
+  RegisterUserInfo user = 4;
+}
+
+message AddUserAccountResp {}
+
+message LoginReq {
+  string address = 1;
+  int32 platform = 2;
+  string deviceID = 3;
+  string ip = 4;
+  string nonce = 5;
+  string signature = 6;
+  string publicKey = 7;
+}
+
+message ResetPasswordReq {
+  string areaCode = 1;
+  string phoneNumber = 2;
+  string verifyCode = 3;
+  string password = 4;
+  string email = 5;
+}
+
+message ResetPasswordResp {}
+
+message ChangePasswordReq {
+  string userID = 1;
+  string currentPassword = 2;
+  string newPassword = 3;
+}
+
+message ChangePasswordResp {}
+
+message FindUserAccountReq {
+  repeated string userIDs = 1;
+}
+
+message FindUserByAddressOrAccountReq {
+  string address = 1;
+  string account = 2;
+}
+
+message FindUserAccountResp {
+  map<string, string> userAccountMap = 1; // userID  account
+}
+
+message FindAccountUserReq {
+  repeated string accounts = 1;
+}
+
+message FindAccountUserResp {
+  map<string, string> accountUserMap = 1; // account  userID
+}
+
+message SignalRecord {
+  string fileName = 1;
+  string mediaType = 2;
+  string roomType = 3;
+  string senderID = 4;
+  string senderNickname = 5;
+  string recvID = 6;
+  string recvNickname = 7;
+  string groupID = 8;
+  string groupName = 9;
+  repeated openim.common.UserPublicInfo inviterUserList = 10;
+  int32 duration = 11;
+  int64 createTime = 12;
+  string size = 13;
+  string downloadURL = 14;
+}
+
+message OpenIMCallbackReq {
+  string command = 1;
+  string body = 2;
+}
+
+message OpenIMCallbackResp {
+  int32 actionCode = 1;
+  int32 errCode = 2;
+  int32 nextCode = 3;
+  string errMsg = 4;
+  string errDlt= 5;
+
+  string sendID = 6;
+  string callbackCommand = 7;
+  string serverMsgID = 8;
+  string clientMsgID = 9;
+  int32 senderPlatformID = 10;
+  string senderNickname = 11;
+  int32 sessionType = 12;
+  int32 msgFrom = 13;
+  int32 contentType = 14;
+  int32 status = 15;
+  int64 createTime = 16;
+  string content = 17;
+  int32 seq = 18;
+  repeated string atUserList = 19;
+  string faceURL = 20;
+  string ex = 21;
+}
+
+message SearchUserFullInfoReq {
+  string keyword = 1;
+  openim.sdkwss.RequestPagination pagination = 2;
+  int32 genders = 3;
+  int32 normal = 4;
+}
+
+message SearchUserFullInfoResp {
+  uint32 total = 1;
+  repeated openim.common.UserFullInfo users = 2;
+}
+
+message UserLoginCountReq {
+  int64 start = 1;
+  int64 end = 2;
+}
+
+message UserLoginCountResp {
+  int64 loginCount = 1;
+  int64 unloginCount = 2;
+  map<string, int64> count = 3;
+}
+
+message LoginResp {
+  string chatToken = 2;
+  string userID = 3;
+}
+
+message SearchUserInfoReq {
+  string keyword = 1;
+  openim.sdkwss.RequestPagination pagination = 2;
+  repeated int32 genders = 3;
+  repeated string userIDs = 4;
+}
+
+message SearchUserInfoResp {
+  uint32 total = 1;
+  repeated openim.common.UserFullInfo users = 2;
+}
+
+message GetTokenForVideoMeetingReq {
+  string room = 1;
+  string identity = 2;
+}
+
+message GetTokenForVideoMeetingResp {
+  string serverUrl = 1;
+  string token = 2;
+}
+
+message CheckUserExistReq {
+  RegisterUserInfo user = 1;
+}
+
+message CheckUserExistResp {
+  string userid = 1;
+  bool isRegistered = 2;
+}
+
+message DelUserAccountReq {
+  repeated string userIDs = 1;
+}
+message DelUserAccountResp {}
+
+
+message getGroupFromContactReq{
+}
+
+
+message getGroupFromContactResp{
+  repeated string groupIDs = 1;
+}
+
+message saveGroupToContactReq{
+  repeated string groupIDs = 1;
+}
+
+message saveGroupToContactResp{
+
+}
+
+message deleteGroupFromContactReq{
+  repeated string groupIDs = 1;
+}
+
+message deleteGroupFromContactResp{
+  
+}
+
+message DeleteGroupApplicationFromRecipientReq {
+
+}
+
+message DeleteGroupApplicationFromRecipientResp {
+
+}
+
+message DeleteGroupApplicationFromApplicantReq {
+
+}
+
+message DeleteGroupApplicationFromApplicantResp {
+  
+}
+
+message DeleteGroupApplicationFromAlltReq {
+
+}
+
+message DeleteGroupApplicationFromAllResp {
+  
+}
+
+
+service chat {
+  // Edit personal information - called by the user or an administrator
+  rpc UpdateUserInfo(UpdateUserInfoReq) returns (UpdateUserInfoResp);
+  rpc AddUserAccount(AddUserAccountReq) returns (AddUserAccountResp);
+  // Get user's public information - called by strangers
+  rpc SearchUserPublicInfo(SearchUserPublicInfoReq) returns (SearchUserPublicInfoResp);
+  rpc FindUserPublicInfo(FindUserPublicInfoReq) returns (FindUserPublicInfoResp);
+  rpc FindUserByAddressOrAccount(FindUserByAddressOrAccountReq) returns (FindUserPublicInfoRespOfOne);
+  // Search user information - called by administrators, other users get public fields
+  rpc SearchUserFullInfo(SearchUserFullInfoReq) returns (SearchUserFullInfoResp);
+  rpc FindUserFullInfo(FindUserFullInfoReq) returns (FindUserFullInfoResp);
+
+  rpc SendVerifyCode(SendVerifyCodeReq) returns (SendVerifyCodeResp);
+  rpc VerifyCode(VerifyCodeReq) returns (VerifyCodeResp);
+
+  rpc ChallengeNonce( ChallengeNonceReq) returns (ChallengeNonceResp);
+  rpc RegisterUser(RegisterUserReq) returns (RegisterUserResp);
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc ResetPassword(ResetPasswordReq) returns (ResetPasswordResp);
+  rpc ChangePassword(ChangePasswordReq) returns (ChangePasswordResp);
+  rpc CheckUserExist(CheckUserExistReq) returns (CheckUserExistResp);
+  rpc DelUserAccount(DelUserAccountReq) returns (DelUserAccountResp);
+
+  rpc FindUserAccount(FindUserAccountReq) returns (FindUserAccountResp);
+  rpc FindAccountUser(FindAccountUserReq) returns (FindAccountUserResp);
+  rpc OpenIMCallback(OpenIMCallbackReq) returns (OpenIMCallbackResp);
+
+  // Statistics
+  rpc UserLoginCount(UserLoginCountReq) returns (UserLoginCountResp);
+
+  rpc SearchUserInfo(SearchUserInfoReq) returns (SearchUserInfoResp);
+
+  // Audio/video call and video meeting
+  rpc GetTokenForVideoMeeting(GetTokenForVideoMeetingReq) returns (GetTokenForVideoMeetingResp);
+
+
+  //保存群组至联系列表
+  rpc saveGroupToContact(saveGroupToContactReq) returns (saveGroupToContactResp);
+  //从联系列表移除群组
+  rpc deleteGroupFromContact(deleteGroupFromContactReq) returns (deleteGroupFromContactResp);
+  //从联系列表获取群组
+  rpc getGroupFromContact(getGroupFromContactReq) returns (getGroupFromContactResp);
+  // 删除用户的加群申请
+  rpc deleteUserGroupApplicationFromRecipient(DeleteGroupApplicationFromRecipientReq) returns (DeleteGroupApplicationFromRecipientResp);
+  // 删除用户自己的加群申请
+  rpc deleteUserGroupApplicationFromApplicant(DeleteGroupApplicationFromApplicantReq) returns (DeleteGroupApplicationFromApplicantResp);
+  // 删除所有关于自己的加群申请
+  rpc deleteUserGroupApplicationFromAll(DeleteGroupApplicationFromAlltReq) returns (DeleteGroupApplicationFromAllResp);
+
+  // 获取所有用户id
+  rpc getAllUserIDs(GetAllUserIDsReq) returns (GetAllUserIDsResp);
+  //Get user online time
+  //rpc getUsersTime(getUsersTimeReq)returns(getUsersTimeResp);
+}
