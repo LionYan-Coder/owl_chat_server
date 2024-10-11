@@ -375,6 +375,106 @@ message DeleteGroupApplicationFromAllResp {
   
 }
 
+message Post{
+  string postID = 1;
+  string userID = 2;
+  string content = 3;
+  int64 commentCount = 4;
+  int64 forwardCount = 5;
+  int64 likeCount = 6;
+  int32 allowComment = 7;
+  int32 allowForward = 8;
+  int32 isLiked = 9;
+  int32 isCollected = 10;
+  int64 createTime = 11;
+  int64 updateTime = 12;
+  repeated string atUserIds = 13;
+  openim.common.UserPublicInfo userInfo = 14;
+  repeated openim.common.PostMedia mediaMsgs = 15;
+  repeated openim.common.UserPublicInfo atUserInfoList = 16;
+  string forwardPostID = 17;
+}
+
+message PublishPostReq {
+  openim.protobuf.StringValue content = 1;
+  int32 allowComment = 2;
+  int32 allowForward = 3;
+  string forwardPostID = 4;  
+  repeated string atUserIds = 5;
+  repeated openim.common.PostMedia mediaMsgs = 6;
+}
+
+message PublishPostResp {
+}
+
+message GetPostPaginationReq {
+  openim.sdkwss.RequestPagination pagination = 1;
+  int32 type = 2;
+}
+
+message GetPostPaginationResp {
+  int64 total = 1;
+  repeated Post posts = 2;
+}
+
+message GetPostByIDReq {
+  string postID = 1;
+}
+
+message GetPostByIDResp {
+  Post post = 1;
+}
+
+message GetPostPaginationByUserReq {
+  string userID = 1;
+  openim.sdkwss.RequestPagination pagination = 2;
+}
+
+message GetPostPaginationByUserResp {
+  int64 total = 1;
+  repeated Post posts = 2;
+}
+message DeletePostReq {
+  string postID = 1;
+}
+
+message DeletePostResp {
+}
+
+message ChangeAllowCommentPostReq {
+  string postID = 1;
+}
+
+message ChangeAllowCommentPostResp {
+  string postID = 1;
+  int32 allowComment = 2;
+}
+
+message ChangeAllowForwardPostReq {
+  string postID = 1;
+}
+
+message ChangeAllowForwardPostResp {
+  string postID = 1;
+  int32 allowForward = 2;
+}
+
+message LikePostReq {
+  string postID = 1;
+}
+
+message LikePostResp {
+  int32 isLiked = 1;
+}
+
+message CollectPostReq {
+  string postID = 1;
+}
+
+message CollectPostResp {
+  int32 isCollected = 1;
+}
+
 
 service chat {
   // Edit personal information - called by the user or an administrator
@@ -427,6 +527,22 @@ service chat {
 
   // 获取所有用户id
   rpc getAllUserIDs(GetAllUserIDsReq) returns (GetAllUserIDsResp);
-  //Get user online time
-  //rpc getUsersTime(getUsersTimeReq)returns(getUsersTimeResp);
+  // 发布帖子 
+  rpc PublishPost(PublishPostReq) returns (PublishPostResp);
+  // 获取帖子分页
+  rpc GetPostPagination(GetPostPaginationReq) returns (GetPostPaginationResp);
+  // 获取帖子详情
+  rpc GetPostByID(GetPostByIDReq) returns (GetPostByIDResp);
+  // 获取用户帖子分页
+  rpc GetPostPaginationByUser(GetPostPaginationByUserReq) returns (GetPostPaginationByUserResp);
+  // 删除帖子
+  rpc DeletePost(DeletePostReq) returns (DeletePostResp);
+  // 修改帖子允许评论
+  rpc ChangeAllowCommentPost(ChangeAllowCommentPostReq) returns (ChangeAllowCommentPostResp);
+  // 修改帖子允许转发
+  rpc ChangeAllowForwardPost(ChangeAllowForwardPostReq) returns (ChangeAllowForwardPostResp);
+  // 点赞帖子
+  rpc ChangeLikePost(LikePostReq) returns (LikePostResp);
+  // 收藏帖子
+  rpc ChangeCollectPost(CollectPostReq) returns (CollectPostResp);
 }

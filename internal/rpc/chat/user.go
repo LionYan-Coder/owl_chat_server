@@ -18,12 +18,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/openimsdk/chat/pkg/common/convert"
 	"github.com/openimsdk/chat/pkg/common/db/dbutil"
 	chatdb "github.com/openimsdk/chat/pkg/common/db/table/chat"
 	constantpb "github.com/openimsdk/chat/pkg/protocol/constant"
 	"github.com/openimsdk/protocol/sdkws"
 
-	// "github.com/openimsdk/tools/log"
 	"github.com/openimsdk/tools/mcontext"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -94,7 +94,7 @@ func (o *chatSvr) FindUserPublicInfo(ctx context.Context, req *chat.FindUserPubl
 		return nil, err
 	}
 	return &chat.FindUserPublicInfoResp{
-		Users: DbToPbAttributes(attributes),
+		Users: convert.DbToPbAttributes(attributes),
 	}, nil
 }
 
@@ -170,7 +170,7 @@ func (o *chatSvr) SearchUserPublicInfo(ctx context.Context, req *chat.SearchUser
 	}
 	return &chat.SearchUserPublicInfoResp{
 		Total: uint32(total),
-		Users: DbToPbAttributes(list),
+		Users: convert.DbToPbAttributes(list),
 	}, nil
 }
 
@@ -185,7 +185,7 @@ func (o *chatSvr) FindUserFullInfo(ctx context.Context, req *chat.FindUserFullIn
 	if err != nil {
 		return nil, err
 	}
-	return &chat.FindUserFullInfoResp{Users: DbToPbUserFullInfos(attributes)}, nil
+	return &chat.FindUserFullInfoResp{Users: convert.DbToPbUserFullInfos(attributes)}, nil
 }
 
 func (o *chatSvr) SearchUserFullInfo(ctx context.Context, req *chat.SearchUserFullInfoReq) (*chat.SearchUserFullInfoResp, error) {
@@ -198,7 +198,7 @@ func (o *chatSvr) SearchUserFullInfo(ctx context.Context, req *chat.SearchUserFu
 	}
 	return &chat.SearchUserFullInfoResp{
 		Total: uint32(total),
-		Users: DbToPbUserFullInfos(list),
+		Users: convert.DbToPbUserFullInfos(list),
 	}, nil
 }
 
@@ -248,7 +248,7 @@ func (o *chatSvr) SearchUserInfo(ctx context.Context, req *chat.SearchUserInfoRe
 	}
 	return &chat.SearchUserInfoResp{
 		Total: uint32(total),
-		Users: DbToPbUserFullInfos(list),
+		Users: convert.DbToPbUserFullInfos(list),
 	}, nil
 }
 
@@ -335,7 +335,7 @@ func (o *chatSvr) FindUserByAddressOrAccount(ctx context.Context, req *chat.Find
 	}
 	if req.Account != attribute.Account || req.Address != attribute.Address {
 		return &chat.FindUserPublicInfoRespOfOne{
-			User: DbToPbAttribute(attribute),
+			User: convert.DbToPbAttribute(attribute),
 		}, nil
 	}
 	return nil, nil

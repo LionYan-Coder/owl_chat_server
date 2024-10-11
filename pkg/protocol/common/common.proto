@@ -14,8 +14,10 @@
 
 syntax = "proto3";
 package openim.common;
-option go_package = "github.com/openimsdk/chat/pkg/protocol/common";
+
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/openimsdk/chat/pkg/protocol/common";
 
 message UserFullInfo{
   string  userID = 1;
@@ -78,4 +80,49 @@ message LogInfo{
   string systemType=8;
   string ex=9;
   string version=10;
+}
+
+message PostAtUserInfo {
+  string userID = 1;
+  string nickname = 2;
+  string account = 3;
+}
+
+message PostMedia {
+  int32 mediaType = 1;
+  PictureElem postPicture = 2;
+  VideoElem postVideo = 3;
+}
+
+
+message PictureBaseInfo {
+  string uuid = 1;
+  string type = 2;
+  int64 size = 3;
+  int32 width = 4;
+  int32 height = 5;
+  string url = 6;
+}
+
+message PictureElem {
+  string sourcePath = 1;
+  PictureBaseInfo sourcePicture = 2;
+  PictureBaseInfo bigPicture = 3;
+  PictureBaseInfo snapshotPicture = 4;
+}
+
+message VideoElem {
+  string videoPath = 1;
+  string videoUUID = 2;
+  string videoUrl = 3;
+  string videoType = 4;
+  int64 videoSize = 5;
+  int64 duration = 6;
+  string snapshotPath = 7;
+  string snapshotUUID = 8;
+  int64 snapshotSize = 9;
+  string snapshotUrl = 10;
+  int32 snapshotWidth = 11;
+  int32 snapshotHeight = 12;
+  string snapshotType = 13;
 }

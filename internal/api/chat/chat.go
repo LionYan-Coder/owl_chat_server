@@ -463,3 +463,67 @@ func (o *Api) DeletMyGroupApplicationFromApplicant(c *gin.Context) {
 func (o *Api) DeletMyGroupApplicationFromAll(c *gin.Context) {
 
 }
+
+// ################## Post ##################
+
+func (o *Api) PublishPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.PublishPost, o.chatClient, c)
+}
+
+func (o *Api) ChangeLikePost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.ChangeLikePost, o.chatClient, c)
+}
+
+func (o *Api) ChangeCollectPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.ChangeCollectPost, o.chatClient, c)
+}
+
+func (o *Api) ChangeAllowCommentPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.ChangeAllowCommentPost, o.chatClient, c)
+}
+
+func (o *Api) ChangeAllowForwardPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.ChangeAllowForwardPost, o.chatClient, c)
+}
+
+func (o *Api) DeletePost(c *gin.Context) {
+	postID := c.Param("postID")
+	if postID == "" {
+		apiresp.GinError(c, errs.ErrArgs.WrapMsg("postID is empty"))
+		return
+	}
+	req := &chatpb.DeletePostReq{
+		PostID: postID,
+	}
+	resp, err := o.chatClient.DeletePost(c, req)
+	if err != nil {
+		apiresp.GinError(c, err)
+		return
+	}
+	apiresp.GinSuccess(c, resp)
+}
+
+func (o *Api) GetPostByID(c *gin.Context) {
+	postID := c.Param("postID")
+	if postID == "" {
+		apiresp.GinError(c, errs.ErrArgs.WrapMsg("postID is empty"))
+		return
+	}
+	req := &chatpb.GetPostByIDReq{
+		PostID: postID,
+	}
+	resp, err := o.chatClient.GetPostByID(c, req)
+	if err != nil {
+		apiresp.GinError(c, err)
+		return
+	}
+	apiresp.GinSuccess(c, resp)
+}
+
+func (o *Api) GetPostPaginationByUser(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetPostPaginationByUser, o.chatClient, c)
+}
+
+func (o *Api) GetPostPagination(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetPostPagination, o.chatClient, c)
+}

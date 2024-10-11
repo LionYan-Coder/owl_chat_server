@@ -254,3 +254,88 @@ func (x *AddUserAccountReq) Check() error {
 
 	return nil
 }
+
+func (x *PublishPostReq) Check() error {
+	if x.Content.GetValue() == "" {
+		return errs.ErrArgs.WrapMsg("content is empty")
+	}
+	if x.AllowComment < 0 || x.AllowComment > 1 {
+		return errs.ErrArgs.WrapMsg("allowComment is invalid")
+	}
+	if x.AllowForward < 0 || x.AllowForward > 1 {
+		return errs.ErrArgs.WrapMsg("allowForward is invalid")
+	}
+	return nil
+}
+
+func (x *GetPostPaginationReq) Check() error {
+	if x.Pagination == nil {
+		return errs.ErrArgs.WrapMsg("pagination is empty")
+	}
+	if x.Pagination.PageNumber < 1 {
+		return errs.ErrArgs.WrapMsg("pageNumber is invalid")
+	}
+	if x.Pagination.ShowNumber < 1 {
+		return errs.ErrArgs.WrapMsg("showNumber is invalid")
+	}
+
+	return nil
+}
+
+func (x *GetPostByIDReq) Check() error {
+	if x.PostID == "" {
+		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}
+
+func (x *GetPostPaginationByUserReq) Check() error {
+	if x.UserID == "" {
+		return errs.ErrArgs.WrapMsg("userID is empty")
+	}
+	if x.Pagination == nil {
+		return errs.ErrArgs.WrapMsg("pagination is empty")
+	}
+	if x.Pagination.PageNumber < 1 {
+		return errs.ErrArgs.WrapMsg("pageNumber is invalid")
+	}
+	if x.Pagination.ShowNumber < 1 {
+		return errs.ErrArgs.WrapMsg("showNumber is invalid")
+	}
+	return nil
+}
+
+func (x *DeletePostReq) Check() error {
+	if x.PostID == "" {
+		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}
+
+func (x *ChangeAllowCommentPostReq) Check() error {
+	if x.PostID == "" {
+		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}
+
+func (x *ChangeAllowForwardPostReq) Check() error {
+	if x.PostID == "" {
+		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}
+
+func (x *LikePostReq) Check() error {
+	if x.PostID == "" {
+		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}
+
+func (x *CollectPostReq) Check() error {
+	if x.PostID == "" {
+		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}

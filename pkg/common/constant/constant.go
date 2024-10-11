@@ -111,3 +111,47 @@ const (
 	EmailRegister = 1
 	PhoneRegister = 2
 )
+
+const (
+	All       = 0
+	Follow    = 1
+	Subscribe = 2
+	Reply     = 3
+	Like      = 4
+	Collect   = 5
+)
+
+const (
+	NotAllow = 0
+	Allow    = 1
+)
+
+const (
+	NotLiked = 0
+	Liked    = 1
+)
+
+const (
+	NotCollected = 0
+	Collected    = 1
+)
+
+const (
+	NotForwarded = 0
+	Forwarded    = 1
+)
+
+const (
+	NotCommented = 0
+	Commented    = 1
+)
+
+const (
+	NotFollowed = 0
+	Followed    = 1
+)
+
+const (
+	NotSubscribed = 0
+	Subscribed    = 1
+)

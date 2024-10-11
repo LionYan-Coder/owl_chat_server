@@ -68,6 +68,17 @@ func SetChatRoute(router gin.IRouter, chat *Api, mw *chatmw.MW) {
 	account.POST("/register", mw.CheckAdminOrNil, chat.RegisterUser) // Register
 	account.POST("/login", chat.Login)                               // Login
 
+	post := router.Group("/post", mw.CheckToken)
+	post.POST("/publish", chat.PublishPost)
+	post.POST("/like", chat.ChangeLikePost)
+	post.POST("/collect", chat.ChangeCollectPost)
+	post.DELETE("/:postID", chat.DeletePost)
+	post.POST("/:postID", chat.GetPostByID)
+	post.POST("/list_by_user", chat.GetPostPaginationByUser)
+	post.POST("/list", chat.GetPostPagination)
+	post.POST("/change_allow_comment", chat.ChangeAllowCommentPost)
+	post.POST("/change_allow_forward", chat.ChangeAllowForwardPost)
+
 	user := router.Group("/user", mw.CheckToken)
 	user.POST("/update", chat.UpdateUserInfo)              // Edit personal information
 	user.POST("/find/public", chat.FindUserPublicInfo)     // Get user's public information

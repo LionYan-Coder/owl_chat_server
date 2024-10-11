@@ -64,6 +64,19 @@ type ChatDatabaseInterface interface {
 	GetGroupFromContact(ctx context.Context, userID string) (*chatdb.Contact, error)
 	DeleteGroupFromContact(ctx context.Context, userID string, groupIDs []string) error
 	SaveGroupToContact(ctx context.Context, userID string, groupIDs []string) error
+
+	GetPostPagination(ctx context.Context, pagination pagination.Pagination) (int64, []*chatdb.Post, error)
+	GetPostPaginationByUser(ctx context.Context, userID string, pagination pagination.Pagination) (int64, []*chatdb.Post, error)
+	GetPostPaginationByPostIDs(ctx context.Context, postIDs []string, pagination pagination.Pagination) (int64, []*chatdb.Post, error)
+	GetPostByID(ctx context.Context, postID string) (*chatdb.Post, error)
+	CreatePost(ctx context.Context, post []*chatdb.PostDB) error
+	UpdatePost(ctx context.Context, postID string, data map[string]any) error
+	DeletePost(ctx context.Context, postID string) error
+
+	GetUserPostRelation(ctx context.Context, userID, postID string) (*chatdb.UserPostRelation, error)
+	CreateUserPostRelation(ctx context.Context, relations []*chatdb.UserPostRelation) error
+	UpdateUserPostRelation(ctx context.Context, userID, postID string, data map[string]any) error
+	DeleteUserPostRelation(ctx context.Context, userID, postID string) error
 }
 
 func NewChatDatabase(cli *mongoutil.Client) (ChatDatabaseInterface, error) {
@@ -96,6 +109,16 @@ func NewChatDatabase(cli *mongoutil.Client) (ChatDatabaseInterface, error) {
 		return nil, err
 	}
 
+	post, err := chat.NewPost(cli.GetDB())
+	if err != nil {
+		return nil, err
+	}
+
+	userPostRelation, err := chat.NewUserPostRelation(cli.GetDB())
+	if err != nil {
+		return nil, err
+	}
+
 	return &ChatDatabase{
 		tx: cli.GetTx(),
 		//rdb:              rdb,
@@ -106,6 +129,8 @@ func NewChatDatabase(cli *mongoutil.Client) (ChatDatabaseInterface, error) {
 		userLoginRecord:  userLoginRecord,
 		verifyCode:       verifyCode,
 		forbiddenAccount: forbiddenAccount,
+		post:             post,
+		userPostRelation: userPostRelation,
 	}, nil
 }
 
@@ -119,6 +144,8 @@ type ChatDatabase struct {
 	userLoginRecord  chatdb.UserLoginRecordInterface
 	verifyCode       chatdb.VerifyCodeInterface
 	forbiddenAccount admin.ForbiddenAccountInterface
+	post             chatdb.PostInterface
+	userPostRelation chatdb.UserPostRelationInterface
 }
 
 // DeleteGroupFromContact implements ChatDatabaseInterface.
@@ -316,4 +343,48 @@ func (o *ChatDatabase) DelUserAccount(ctx context.Context, userIDs []string) err
 		}
 		return nil
 	})
+}
+
+func (o *ChatDatabase) DeletePost(ctx context.Context, postID string) error {
+	return o.post.Delete(ctx, postID)
+}
+
+func (o *ChatDatabase) GetPostPagination(ctx context.Context, pagination pagination.Pagination) (int64, []*chatdb.Post, error) {
+	return o.post.PageGet(ctx, pagination)
+}
+
+func (o *ChatDatabase) GetPostPaginationByUser(ctx context.Context, userID string, pagination pagination.Pagination) (int64, []*chatdb.Post, error) {
+	return o.post.PageGetByUser(ctx, userID, pagination)
+}
+
+func (o *ChatDatabase) GetPostPaginationByPostIDs(ctx context.Context, postIDs []string, pagination pagination.Pagination) (int64, []*chatdb.Post, error) {
+	return o.post.PageGetByPostIDs(ctx, postIDs, pagination)
+}
+
+func (o *ChatDatabase) GetPostByID(ctx context.Context, postID string) (*chatdb.Post, error) {
+	return o.post.Take(ctx, postID)
+}
+
+func (o *ChatDatabase) CreatePost(ctx context.Context, posts []*chatdb.PostDB) error {
+	return o.post.Create(ctx, posts)
+}
+
+func (o *ChatDatabase) UpdatePost(ctx context.Context, postID string, data map[string]any) error {
+	return o.post.UpdateByMap(ctx, postID, data)
+}
+
+func (o *ChatDatabase) GetUserPostRelation(ctx context.Context, userID, postID string) (*chatdb.UserPostRelation, error) {
+	return o.userPostRelation.Take(ctx, userID, postID)
+}
+
+func (o *ChatDatabase) CreateUserPostRelation(ctx context.Context, relations []*chatdb.UserPostRelation) error {
+	return o.userPostRelation.Create(ctx, relations)
+}
+
+func (o *ChatDatabase) UpdateUserPostRelation(ctx context.Context, userID, postID string, data map[string]any) error {
+	return o.userPostRelation.UpdateByMap(ctx, userID, postID, data)
+}
+
+func (o *ChatDatabase) DeleteUserPostRelation(ctx context.Context, userID, postID string) error {
+	return o.userPostRelation.Delete(ctx, userID, postID)
 }

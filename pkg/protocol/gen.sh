@@ -19,7 +19,6 @@ PROTO_NAMES=(
     "sdkwss"
 )
 
-
 for name in "${PROTO_NAMES[@]}"; do
     protoc --go_out=plugins=grpc:./${name} --go_opt=module=github.com/openimsdk/chat/pkg/protocol/${name} ${name}/${name}.proto
 done
