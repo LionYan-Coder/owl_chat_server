@@ -228,6 +228,55 @@ message incrSyncFriendsResp{
   uint64 version = 5;
 }
 
+message followUserReq {
+  string ownerUserID = 1;
+  string relatedUserID = 2;
+}
+
+message followUserResp {
+}
+
+message unfollowUserReq {
+  string ownerUserID = 1;
+  string relatedUserID = 2;
+}
+
+message unfollowUserResp {
+}
+
+message subscribeUserReq {
+  string ownerUserID = 1;
+  string relatedUserID = 2;
+}
+
+message subscribeUserResp {
+}
+
+message unsubscribeUserReq {
+  string ownerUserID = 1;
+  string relatedUserID = 2;
+}
+
+message unsubscribeUserResp {
+}
+
+message getFollowerIDsReq {
+  string userID = 1;
+}
+
+message getFollowerIDsResp {
+  repeated string userIDs = 1;
+}
+
+message getSubscriberIDsReq {
+  string userID = 1;
+}
+
+message getSubscriberIDsResp {
+  repeated string userIDs = 1;
+}
+
+
 service friend{
   //申请加好友
   rpc applyToAddFriend(applyToAddFriendReq) returns(applyToAddFriendResp);

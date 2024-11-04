@@ -268,20 +268,6 @@ func (x *PublishPostReq) Check() error {
 	return nil
 }
 
-func (x *GetPostPaginationReq) Check() error {
-	if x.Pagination == nil {
-		return errs.ErrArgs.WrapMsg("pagination is empty")
-	}
-	if x.Pagination.PageNumber < 1 {
-		return errs.ErrArgs.WrapMsg("pageNumber is invalid")
-	}
-	if x.Pagination.ShowNumber < 1 {
-		return errs.ErrArgs.WrapMsg("showNumber is invalid")
-	}
-
-	return nil
-}
-
 func (x *GetPostByIDReq) Check() error {
 	if x.PostID == "" {
 		return errs.ErrArgs.WrapMsg("postID is empty")
@@ -289,18 +275,9 @@ func (x *GetPostByIDReq) Check() error {
 	return nil
 }
 
-func (x *GetPostPaginationByUserReq) Check() error {
+func (x *GetPostListByUserReq) Check() error {
 	if x.UserID == "" {
 		return errs.ErrArgs.WrapMsg("userID is empty")
-	}
-	if x.Pagination == nil {
-		return errs.ErrArgs.WrapMsg("pagination is empty")
-	}
-	if x.Pagination.PageNumber < 1 {
-		return errs.ErrArgs.WrapMsg("pageNumber is invalid")
-	}
-	if x.Pagination.ShowNumber < 1 {
-		return errs.ErrArgs.WrapMsg("showNumber is invalid")
 	}
 	return nil
 }
@@ -336,6 +313,34 @@ func (x *LikePostReq) Check() error {
 func (x *CollectPostReq) Check() error {
 	if x.PostID == "" {
 		return errs.ErrArgs.WrapMsg("postID is empty")
+	}
+	return nil
+}
+
+func (x *ForwardPostReq) Check() error {
+	if x.ForwardPostID == "" {
+		return errs.ErrArgs.WrapMsg("forwardPostID is empty")
+	}
+	return nil
+}
+
+func (x *CommentPostReq) Check() error {
+	if x.CommentPostID == "" {
+		return errs.ErrArgs.WrapMsg("commentPostID is empty")
+	}
+	return nil
+}
+
+func (x *ReferencePostReq) Check() error {
+	if x.RefPostID == "" {
+		return errs.ErrArgs.WrapMsg("refPostID is empty")
+	}
+	return nil
+}
+
+func (x *CheckVersionReq) Check() error {
+	if x.Language == "" {
+		return errs.ErrArgs.WrapMsg("language is empty")
 	}
 	return nil
 }

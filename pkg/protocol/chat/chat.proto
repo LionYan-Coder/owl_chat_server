@@ -386,35 +386,33 @@ message Post{
   int32 allowForward = 8;
   int32 isLiked = 9;
   int32 isCollected = 10;
-  int64 createTime = 11;
-  int64 updateTime = 12;
-  repeated string atUserIds = 13;
-  openim.common.UserPublicInfo userInfo = 14;
-  repeated openim.common.PostMedia mediaMsgs = 15;
-  repeated openim.common.UserPublicInfo atUserInfoList = 16;
-  string forwardPostID = 17;
+  int32 isForwarded = 11;
+  int64 createTime = 12;
+  int64 updateTime = 13;
+  repeated string atUserIds = 14;
+  openim.common.UserPublicInfo userInfo = 15;
+  repeated openim.common.PostMedia mediaMsgs = 16;
+  repeated openim.common.UserPublicInfo atUserInfoList = 17;
+  string forwardPostID = 18;
+  string commentPostID = 19;
+  string refPostID = 20;
+  Post forwardPost = 21;
+  Post commentPost = 22;
+  Post refPost = 23;
+  int32 isPinned = 24;
+  int32 isCommented = 25;
 }
 
 message PublishPostReq {
   openim.protobuf.StringValue content = 1;
   int32 allowComment = 2;
   int32 allowForward = 3;
-  string forwardPostID = 4;  
-  repeated string atUserIds = 5;
-  repeated openim.common.PostMedia mediaMsgs = 6;
+  repeated string atUserIds = 4;
+  repeated openim.common.PostMedia mediaMsgs = 5;
 }
 
 message PublishPostResp {
-}
-
-message GetPostPaginationReq {
-  openim.sdkwss.RequestPagination pagination = 1;
-  int32 type = 2;
-}
-
-message GetPostPaginationResp {
-  int64 total = 1;
-  repeated Post posts = 2;
+  Post post = 1;
 }
 
 message GetPostByIDReq {
@@ -425,18 +423,60 @@ message GetPostByIDResp {
   Post post = 1;
 }
 
-message GetPostPaginationByUserReq {
-  string userID = 1;
-  openim.sdkwss.RequestPagination pagination = 2;
+message GetAllTypePostReq {
+  int32 count = 1;
 }
 
-message GetPostPaginationByUserResp {
-  int64 total = 1;
+message GetAllTypePostResp {
+  repeated TypePosts allPosts = 1;
+}
+
+message TypePosts {
+  int32 type = 1;
+  int64 nextCursor = 2;
+  repeated Post posts = 3;
+}
+
+message GetPostListReq {
+  int64 nextCursor = 1;
+  int32 count = 2;
+  int32 type = 3;
+}
+
+message GetPostListResp {
+  int64 nextCursor = 1;
   repeated Post posts = 2;
 }
+
+
+message GetPostListByUserReq {
+  string userID = 1;
+  int64 nextCursor = 2;
+  int32 count = 3;
+}
+
+message GetPostListByUserResp {
+  int64 nextCursor = 1;
+  repeated Post posts = 2;
+}
+
+
+message GetCommentPostListByPostIDReq {
+  string postID = 1;
+  int64 nextCursor = 2;
+  int32 count = 3;
+}
+
+message GetCommentPostListByPostIDResp {
+  int64 nextCursor = 1;
+  repeated Post posts = 2;
+}
+
 message DeletePostReq {
   string postID = 1;
 }
+
+
 
 message DeletePostResp {
 }
@@ -461,6 +501,7 @@ message ChangeAllowForwardPostResp {
 
 message LikePostReq {
   string postID = 1;
+  int32  isLiked = 2;
 }
 
 message LikePostResp {
@@ -469,12 +510,76 @@ message LikePostResp {
 
 message CollectPostReq {
   string postID = 1;
+  int32  isCollected = 2;
 }
 
 message CollectPostResp {
   int32 isCollected = 1;
 }
 
+message ForwardPostReq {
+  string forwardPostID = 1;
+  int32 isForwarded = 2;
+}
+
+message ForwardPostResp {
+  int32 isForwarded = 1;
+}
+
+message ReferencePostReq {
+  string refPostID = 1;
+  openim.protobuf.StringValue content = 2;
+  int32 allowComment = 3;
+  int32 allowForward = 4;
+  repeated string atUserIds = 5;
+  repeated openim.common.PostMedia mediaMsgs = 6;
+}
+
+message ReferencePostResp {
+}
+
+message CommentPostReq {
+  string commentPostID = 1;
+  openim.protobuf.StringValue content = 2;
+  int32 allowComment = 3;
+  int32 allowForward = 4; 
+  repeated string atUserIds = 5;
+  repeated openim.common.PostMedia mediaMsgs = 6;
+}
+
+message CommentPostResp {
+  Post post = 1;
+}
+
+message PinPostReq {
+  string postID = 1;
+  int32 isPinned = 2;
+}
+
+message PinPostResp {
+}
+
+
+message CheckVersionReq {
+  string language = 1;
+}
+
+message CheckVersionResp {
+  string buildVersion = 1;
+  string downloadURL = 2;
+  string buildUpdateTitle = 3;
+  string buildUpdateDescriptionTitle = 4;
+  repeated string buildUpdateDescriptions = 5;
+  bool needForceUpdate = 6;
+}
+
+message GetFakeUserReq {
+}
+
+message GetFakeUserResp {
+  int32 online = 1;
+  int32 total = 2;
+}
 
 service chat {
   // Edit personal information - called by the user or an administrator
@@ -524,17 +629,22 @@ service chat {
   rpc deleteUserGroupApplicationFromApplicant(DeleteGroupApplicationFromApplicantReq) returns (DeleteGroupApplicationFromApplicantResp);
   // 删除所有关于自己的加群申请
   rpc deleteUserGroupApplicationFromAll(DeleteGroupApplicationFromAlltReq) returns (DeleteGroupApplicationFromAllResp);
-
   // 获取所有用户id
   rpc getAllUserIDs(GetAllUserIDsReq) returns (GetAllUserIDsResp);
+
+
   // 发布帖子 
   rpc PublishPost(PublishPostReq) returns (PublishPostResp);
-  // 获取帖子分页
-  rpc GetPostPagination(GetPostPaginationReq) returns (GetPostPaginationResp);
+  // 获取所有帖子类型
+  rpc GetAllTypePost(GetAllTypePostReq) returns (GetAllTypePostResp);
+  // 获取帖子列表
+  rpc GetPostList(GetPostListReq) returns (GetPostListResp);
+  // 获取帖子列表(用户)
+  rpc GetPostListByUser(GetPostListByUserReq) returns (GetPostListByUserResp);
+  // 获取评论帖子列表
+  rpc GetCommentPostListByPostID(GetCommentPostListByPostIDReq) returns (GetCommentPostListByPostIDResp);
   // 获取帖子详情
   rpc GetPostByID(GetPostByIDReq) returns (GetPostByIDResp);
-  // 获取用户帖子分页
-  rpc GetPostPaginationByUser(GetPostPaginationByUserReq) returns (GetPostPaginationByUserResp);
   // 删除帖子
   rpc DeletePost(DeletePostReq) returns (DeletePostResp);
   // 修改帖子允许评论
@@ -545,4 +655,16 @@ service chat {
   rpc ChangeLikePost(LikePostReq) returns (LikePostResp);
   // 收藏帖子
   rpc ChangeCollectPost(CollectPostReq) returns (CollectPostResp);
+  // 置顶帖子
+  rpc PinPost(PinPostReq) returns (PinPostResp);
+  // 转发帖子
+  rpc ForwardPost(ForwardPostReq) returns (ForwardPostResp);
+  // 评论帖子
+  rpc CommentPost(CommentPostReq) returns (CommentPostResp);
+  // 引用帖子
+  rpc ReferencePost(ReferencePostReq) returns (ReferencePostResp);
+  // 检查版本
+  rpc CheckVersion(CheckVersionReq) returns (CheckVersionResp);
+  // 获取假用户
+  rpc GetFakeUser(GetFakeUserReq) returns (GetFakeUserResp);
 }

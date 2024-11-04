@@ -65,18 +65,31 @@ type ChatDatabaseInterface interface {
 	DeleteGroupFromContact(ctx context.Context, userID string, groupIDs []string) error
 	SaveGroupToContact(ctx context.Context, userID string, groupIDs []string) error
 
-	GetPostPagination(ctx context.Context, pagination pagination.Pagination) (int64, []*chatdb.Post, error)
-	GetPostPaginationByUser(ctx context.Context, userID string, pagination pagination.Pagination) (int64, []*chatdb.Post, error)
-	GetPostPaginationByPostIDs(ctx context.Context, postIDs []string, pagination pagination.Pagination) (int64, []*chatdb.Post, error)
-	GetPostByID(ctx context.Context, postID string) (*chatdb.Post, error)
 	CreatePost(ctx context.Context, post []*chatdb.PostDB) error
 	UpdatePost(ctx context.Context, postID string, data map[string]any) error
-	DeletePost(ctx context.Context, postID string) error
+	DeletePost(ctx context.Context, postIDs []string) error
+	GetPostByID(ctx context.Context, postID string) (*chatdb.Post, error)
+	GetPostByForwardPostID(ctx context.Context, userID, forwardPostID string) (*chatdb.Post, error)
+
+	GetPostsByCursorAndUserIDs(ctx context.Context, cursor int64, userIDs []string, count int64) ([]*chatdb.Post, string, error)
+	GetPostsByCursorAndUser(ctx context.Context, cursor int64, userID string, count int64) ([]*chatdb.Post, string, error)
+	GetPostsByCursorAndPostIDs(ctx context.Context, cursor int64, postIDs []string, count int64) ([]*chatdb.Post, string, error)
+	GetCommentPostsByPostID(ctx context.Context, cursor int64, postID string, count int64) ([]*chatdb.Post, string, error)
+	GetCommentPostIDsByUser(ctx context.Context, userID string) ([]string, error)
+	GetFollowedUserIDs(ctx context.Context, userID string) ([]string, error)
+	GetSubscriberUserIDs(ctx context.Context, userID string) ([]string, error)
 
 	GetUserPostRelation(ctx context.Context, userID, postID string) (*chatdb.UserPostRelation, error)
 	CreateUserPostRelation(ctx context.Context, relations []*chatdb.UserPostRelation) error
 	UpdateUserPostRelation(ctx context.Context, userID, postID string, data map[string]any) error
 	DeleteUserPostRelation(ctx context.Context, userID, postID string) error
+
+	GetPostIDsByLike(ctx context.Context, userID string) ([]string, error)
+	GetPostIDsByCollect(ctx context.Context, userID string) ([]string, error)
+	GetPinnedPostByUserID(ctx context.Context, userID string) (*chatdb.Post, error)
+
+	GetVersionConfig(ctx context.Context) (*chatdb.AppVersionConfig, error)
+	GetFakeUserConfig(ctx context.Context) (*chatdb.AppFakeUserConfig, error)
 }
 
 func NewChatDatabase(cli *mongoutil.Client) (ChatDatabaseInterface, error) {
@@ -115,6 +128,12 @@ func NewChatDatabase(cli *mongoutil.Client) (ChatDatabaseInterface, error) {
 	}
 
 	userPostRelation, err := chat.NewUserPostRelation(cli.GetDB())
+
+	appConfig, err := chat.NewAppConfig(cli.GetDB())
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +150,7 @@ func NewChatDatabase(cli *mongoutil.Client) (ChatDatabaseInterface, error) {
 		forbiddenAccount: forbiddenAccount,
 		post:             post,
 		userPostRelation: userPostRelation,
+		appConfig:        appConfig,
 	}, nil
 }
 
@@ -146,6 +166,7 @@ type ChatDatabase struct {
 	forbiddenAccount admin.ForbiddenAccountInterface
 	post             chatdb.PostInterface
 	userPostRelation chatdb.UserPostRelationInterface
+	appConfig        chatdb.AppConfigInterface
 }
 
 // DeleteGroupFromContact implements ChatDatabaseInterface.
@@ -345,20 +366,32 @@ func (o *ChatDatabase) DelUserAccount(ctx context.Context, userIDs []string) err
 	})
 }
 
-func (o *ChatDatabase) DeletePost(ctx context.Context, postID string) error {
-	return o.post.Delete(ctx, postID)
+func (o *ChatDatabase) DeletePost(ctx context.Context, postIDs []string) error {
+	return o.post.Delete(ctx, postIDs)
 }
 
-func (o *ChatDatabase) GetPostPagination(ctx context.Context, pagination pagination.Pagination) (int64, []*chatdb.Post, error) {
-	return o.post.PageGet(ctx, pagination)
+func (o *ChatDatabase) GetFollowedUserIDs(ctx context.Context, userID string) ([]string, error) {
+	return o.post.GetFollowedUserIDs(ctx, userID)
 }
 
-func (o *ChatDatabase) GetPostPaginationByUser(ctx context.Context, userID string, pagination pagination.Pagination) (int64, []*chatdb.Post, error) {
-	return o.post.PageGetByUser(ctx, userID, pagination)
+func (o *ChatDatabase) GetSubscriberUserIDs(ctx context.Context, userID string) ([]string, error) {
+	return o.post.GetSubscriberUserIDs(ctx, userID)
 }
 
-func (o *ChatDatabase) GetPostPaginationByPostIDs(ctx context.Context, postIDs []string, pagination pagination.Pagination) (int64, []*chatdb.Post, error) {
-	return o.post.PageGetByPostIDs(ctx, postIDs, pagination)
+func (o *ChatDatabase) GetPostByForwardPostID(ctx context.Context, userID, forwardPostID string) (*chatdb.Post, error) {
+	return o.post.GetPostByForwardPostID(ctx, userID, forwardPostID)
+}
+
+func (o *ChatDatabase) GetCommentPostsByPostID(ctx context.Context, cursor int64, postID string, count int64) ([]*chatdb.Post, string, error) {
+	return o.post.GetCommentPostsByPostID(ctx, cursor, postID, count)
+}
+
+func (o *ChatDatabase) GetPostsByCursorAndUserIDs(ctx context.Context, cursor int64, userIDs []string, count int64) ([]*chatdb.Post, string, error) {
+	return o.post.GetPostsByCursorAndUserIDs(ctx, cursor, userIDs, count)
+}
+
+func (o *ChatDatabase) GetPostsByCursorAndUser(ctx context.Context, cursor int64, userID string, count int64) ([]*chatdb.Post, string, error) {
+	return o.post.GetPostsByCursorAndUser(ctx, cursor, userID, count)
 }
 
 func (o *ChatDatabase) GetPostByID(ctx context.Context, postID string) (*chatdb.Post, error) {
@@ -371,6 +404,10 @@ func (o *ChatDatabase) CreatePost(ctx context.Context, posts []*chatdb.PostDB) e
 
 func (o *ChatDatabase) UpdatePost(ctx context.Context, postID string, data map[string]any) error {
 	return o.post.UpdateByMap(ctx, postID, data)
+}
+
+func (o *ChatDatabase) GetCommentPostIDsByUser(ctx context.Context, userID string) ([]string, error) {
+	return o.post.GetCommentPostIDsByUser(ctx, userID)
 }
 
 func (o *ChatDatabase) GetUserPostRelation(ctx context.Context, userID, postID string) (*chatdb.UserPostRelation, error) {
@@ -387,4 +424,28 @@ func (o *ChatDatabase) UpdateUserPostRelation(ctx context.Context, userID, postI
 
 func (o *ChatDatabase) DeleteUserPostRelation(ctx context.Context, userID, postID string) error {
 	return o.userPostRelation.Delete(ctx, userID, postID)
+}
+
+func (o *ChatDatabase) GetPostIDsByLike(ctx context.Context, userID string) ([]string, error) {
+	return o.userPostRelation.GetLikedPostIDs(ctx, userID)
+}
+
+func (o *ChatDatabase) GetPostIDsByCollect(ctx context.Context, userID string) ([]string, error) {
+	return o.userPostRelation.GetCollectedPostIDs(ctx, userID)
+}
+
+func (o *ChatDatabase) GetPinnedPostByUserID(ctx context.Context, userID string) (*chatdb.Post, error) {
+	return o.post.GetPinnedPostByUserID(ctx, userID)
+}
+
+func (o *ChatDatabase) GetPostsByCursorAndPostIDs(ctx context.Context, cursor int64, postIDs []string, count int64) ([]*chatdb.Post, string, error) {
+	return o.post.GetPostsByCursorAndPostIDs(ctx, cursor, postIDs, count)
+}
+
+func (o *ChatDatabase) GetVersionConfig(ctx context.Context) (*chatdb.AppVersionConfig, error) {
+	return o.appConfig.GetVersionConfig(ctx)
+}
+
+func (o *ChatDatabase) GetFakeUserConfig(ctx context.Context) (*chatdb.AppFakeUserConfig, error) {
+	return o.appConfig.GetFakeUserConfig(ctx)
 }

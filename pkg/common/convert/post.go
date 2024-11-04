@@ -5,12 +5,26 @@ import (
 	chatpb "github.com/openimsdk/chat/pkg/protocol/chat"
 	"github.com/openimsdk/chat/pkg/protocol/common"
 	"github.com/openimsdk/tools/utils/datautil"
+
+	"github.com/openimsdk/chat/pkg/common/constant"
 )
 
 func PostDB2Pb(postDB *chat.Post) *chatpb.Post {
+	if postDB == nil {
+		return nil
+	}
 	postPB := &chatpb.Post{}
 	if err := datautil.CopyStructFields(postPB, postDB); err != nil {
 		return nil
+	}
+	if postDB.ForwardPost != nil {
+		postPB.ForwardPost = PostDB2Pb(postDB.ForwardPost)
+	}
+	if postDB.CommentPost != nil {
+		postPB.CommentPost = PostDB2Pb(postDB.CommentPost)
+	}
+	if postDB.RefPost != nil {
+		postPB.RefPost = PostDB2Pb(postDB.RefPost)
 	}
 	postPB.CreateTime = postDB.CreateTime.UnixMilli()
 	postPB.UpdateTime = postDB.UpdateTime.UnixMilli()
@@ -60,9 +74,14 @@ func PostMediasPb2DB(mediasPB []*common.PostMedia) (mediasDB []*chat.PostMedia) 
 }
 
 func PostMediaPb2DB(mediaPB *common.PostMedia) *chat.PostMedia {
-	return &chat.PostMedia{
-		MediaType:   mediaPB.MediaType,
-		PostPicture: *PictureElemPb2DB(mediaPB.PostPicture),
-		PostVideo:   *VideoElemPb2DB(mediaPB.PostVideo),
+	media := &chat.PostMedia{MediaType: mediaPB.MediaType}
+
+	switch mediaPB.MediaType {
+	case constant.PostMediaTypePicture:
+		media.PostPicture = *PictureElemPb2DB(mediaPB.PostPicture)
+	case constant.PostMediaTypeVideo:
+		media.PostVideo = *VideoElemPb2DB(mediaPB.PostVideo)
 	}
+
+	return media
 }

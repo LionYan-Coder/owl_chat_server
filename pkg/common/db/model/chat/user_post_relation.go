@@ -20,7 +20,8 @@ func NewUserPostRelation(db *mongo.Database) (chat.UserPostRelationInterface, er
 	coll := db.Collection("user_post_relation")
 	_, err := coll.Indexes().CreateOne(context.Background(), mongo.IndexModel{
 		Keys: bson.D{
-			{Key: "relation_id", Value: 1},
+			{Key: "user_id", Value: 1},
+			{Key: "post_id", Value: 1},
 		},
 		Options: options.Index().SetUnique(true),
 	})
@@ -30,16 +31,16 @@ func NewUserPostRelation(db *mongo.Database) (chat.UserPostRelationInterface, er
 	return &UserPostRelation{coll: coll}, nil
 }
 
-func (o *UserPostRelation) Create(ctx context.Context, posts []*chat.UserPostRelation) error {
-	for i, post := range posts {
-		if post.CreateTime.IsZero() {
-			posts[i].CreateTime = time.Now()
+func (o *UserPostRelation) Create(ctx context.Context, relations []*chat.UserPostRelation) error {
+	for i, relation := range relations {
+		if relation.CreateTime.IsZero() {
+			relations[i].CreateTime = time.Now()
 		}
-		if post.UpdateTime.IsZero() {
-			posts[i].UpdateTime = time.Now()
+		if relation.UpdateTime.IsZero() {
+			relations[i].UpdateTime = time.Now()
 		}
 	}
-	return mongoutil.InsertMany(ctx, o.coll, posts)
+	return mongoutil.InsertMany(ctx, o.coll, relations)
 }
 
 func (o *UserPostRelation) Take(ctx context.Context, userID, postID string) (*chat.UserPostRelation, error) {
@@ -73,14 +74,6 @@ func (o *UserPostRelation) GetForwardCount(ctx context.Context, postID string) (
 
 func (o *UserPostRelation) GetCommentCount(ctx context.Context, postID string) (int64, error) {
 	return mongoutil.Count(ctx, o.coll, bson.M{"post_id": postID, "is_commented": 1})
-}
-
-func (o *UserPostRelation) GetFollowCount(ctx context.Context, userID string) (int64, error) {
-	return mongoutil.Count(ctx, o.coll, bson.M{"user_id": userID, "is_followed": 1})
-}
-
-func (o *UserPostRelation) GetSubscribeCount(ctx context.Context, userID string) (int64, error) {
-	return mongoutil.Count(ctx, o.coll, bson.M{"user_id": userID, "is_subscribed": 1})
 }
 
 func (o *UserPostRelation) GetLikeCounts(ctx context.Context, postIDs []string) (map[string]int64, error) {
@@ -160,14 +153,6 @@ func (o *UserPostRelation) GetIsForwarded(ctx context.Context, userID, postID st
 
 func (o *UserPostRelation) GetIsCommented(ctx context.Context, userID, postID string) (int32, error) {
 	return mongoutil.FindOne[int32](ctx, o.coll, bson.M{"user_id": userID, "post_id": postID, "is_commented": 1})
-}
-
-func (o *UserPostRelation) GetFollowPostIDs(ctx context.Context, userID string) ([]string, error) {
-	return mongoutil.Find[string](ctx, o.coll, bson.M{"user_id": userID, "is_followed": 1}, options.Find().SetProjection(bson.M{"_id": 0, "post_id": 1}))
-}
-
-func (o *UserPostRelation) GetSubscribePostIDs(ctx context.Context, userID string) ([]string, error) {
-	return mongoutil.Find[string](ctx, o.coll, bson.M{"user_id": userID, "is_subscribed": 1}, options.Find().SetProjection(bson.M{"_id": 0, "post_id": 1}))
 }
 
 func (o *UserPostRelation) GetReplyPostIDs(ctx context.Context, userID string) ([]string, error) {

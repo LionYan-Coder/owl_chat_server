@@ -113,12 +113,11 @@ const (
 )
 
 const (
-	All       = 0
-	Follow    = 1
-	Subscribe = 2
-	Reply     = 3
-	Like      = 4
-	Collect   = 5
+	Follow    = 0
+	Subscribe = 1
+	Reply     = 2
+	Like      = 3
+	Collect   = 4
 )
 
 const (
@@ -154,4 +153,14 @@ const (
 const (
 	NotSubscribed = 0
 	Subscribed    = 1
+)
+
+const (
+	PostMediaTypePicture = 0
+	PostMediaTypeVideo   = 1
+)
+
+const (
+	Pinned   = 1
+	UnPinned = 0
 )

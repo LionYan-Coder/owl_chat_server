@@ -27,6 +27,7 @@ import (
 var (
 	importFriend        = NewApiCaller[friend.ImportFriendReq, friend.ImportFriendResp]("/friend/import_friend")
 	userToken           = NewApiCaller[auth.UserTokenReq, auth.UserTokenResp]("/auth/user_token")
+	parseToken          = NewApiCaller[auth.ParseTokenReq, auth.ParseTokenResp]("/auth/parse_token")
 	inviteToGroup       = NewApiCaller[group.InviteUserToGroupReq, group.InviteUserToGroupResp]("/group/invite_user_to_group")
 	updateUserInfo      = NewApiCaller[user.UpdateUserInfoReq, user.UpdateUserInfoResp]("/user/update_user_info")
 	registerUser        = NewApiCaller[user.UserRegisterReq, user.UserRegisterResp]("/user/user_register")

@@ -52,22 +52,6 @@ type Api struct {
 	imApiCaller imapi.CallerInterface
 }
 
-func (o *Api) ChallengeNonce(c *gin.Context) {
-	req, err := a2r.ParseRequest[chatpb.ChallengeNonceReq](c)
-	if err != nil {
-		apiresp.GinError(c, err)
-		return
-	}
-	var resp apistruct.ChallengeNonceResp
-	challengeResp, err := o.chatClient.ChallengeNonce(c, req)
-	if err != nil {
-		apiresp.GinError(c, err)
-		return
-	}
-	resp.Nonce = challengeResp.Nonce
-	apiresp.GinSuccess(c, &resp)
-}
-
 // ################## ACCOUNT ##################
 
 func (o *Api) SendVerifyCode(c *gin.Context) {
@@ -470,6 +454,22 @@ func (o *Api) PublishPost(c *gin.Context) {
 	a2r.Call(chatpb.ChatClient.PublishPost, o.chatClient, c)
 }
 
+func (o *Api) ForwardPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.ForwardPost, o.chatClient, c)
+}
+
+func (o *Api) CommentPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.CommentPost, o.chatClient, c)
+}
+
+func (o *Api) PinPost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.PinPost, o.chatClient, c)
+}
+
+func (o *Api) ReferencePost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.ReferencePost, o.chatClient, c)
+}
+
 func (o *Api) ChangeLikePost(c *gin.Context) {
 	a2r.Call(chatpb.ChatClient.ChangeLikePost, o.chatClient, c)
 }
@@ -487,20 +487,7 @@ func (o *Api) ChangeAllowForwardPost(c *gin.Context) {
 }
 
 func (o *Api) DeletePost(c *gin.Context) {
-	postID := c.Param("postID")
-	if postID == "" {
-		apiresp.GinError(c, errs.ErrArgs.WrapMsg("postID is empty"))
-		return
-	}
-	req := &chatpb.DeletePostReq{
-		PostID: postID,
-	}
-	resp, err := o.chatClient.DeletePost(c, req)
-	if err != nil {
-		apiresp.GinError(c, err)
-		return
-	}
-	apiresp.GinSuccess(c, resp)
+	a2r.Call(chatpb.ChatClient.DeletePost, o.chatClient, c)
 }
 
 func (o *Api) GetPostByID(c *gin.Context) {
@@ -520,10 +507,28 @@ func (o *Api) GetPostByID(c *gin.Context) {
 	apiresp.GinSuccess(c, resp)
 }
 
-func (o *Api) GetPostPaginationByUser(c *gin.Context) {
-	a2r.Call(chatpb.ChatClient.GetPostPaginationByUser, o.chatClient, c)
+func (o *Api) GetPostListByUser(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetPostListByUser, o.chatClient, c)
 }
 
-func (o *Api) GetPostPagination(c *gin.Context) {
-	a2r.Call(chatpb.ChatClient.GetPostPagination, o.chatClient, c)
+func (o *Api) GetPostList(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetPostList, o.chatClient, c)
+}
+
+func (o *Api) GetAllTypePost(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetAllTypePost, o.chatClient, c)
+}
+
+func (o *Api) GetCommentPostListByPostID(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetCommentPostListByPostID, o.chatClient, c)
+}
+
+// ################## App Config ##################
+
+func (o *Api) CheckVersion(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.CheckVersion, o.chatClient, c)
+}
+
+func (o *Api) GetFakeUser(c *gin.Context) {
+	a2r.Call(chatpb.ChatClient.GetFakeUser, o.chatClient, c)
 }

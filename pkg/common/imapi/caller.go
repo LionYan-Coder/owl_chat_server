@@ -105,6 +105,16 @@ func (c *Caller) UserToken(ctx context.Context, userID string, platformID int32)
 	return resp.Token, nil
 }
 
+func (c *Caller) ParseToken(ctx context.Context, token string) (*auth.ParseTokenResp, error) {
+	resp, err := parseToken.Call(ctx, c.imApi, &auth.ParseTokenReq{
+		Token: token,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (c *Caller) InviteToGroup(ctx context.Context, userID string, groupIDs []string) error {
 	for _, groupID := range groupIDs {
 		_, _ = inviteToGroup.Call(ctx, c.imApi, &group.InviteUserToGroupReq{

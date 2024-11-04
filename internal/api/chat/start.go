@@ -64,6 +64,11 @@ func Start(ctx context.Context, index int, config *Config) error {
 }
 
 func SetChatRoute(router gin.IRouter, chat *Api, mw *chatmw.MW) {
+
+	config := router.Group("/config")
+	config.POST("/checkVersion", chat.CheckVersion)
+	config.POST("/fakeUser", chat.GetFakeUser)
+
 	account := router.Group("/account")
 	account.POST("/register", mw.CheckAdminOrNil, chat.RegisterUser) // Register
 	account.POST("/login", chat.Login)                               // Login
@@ -72,10 +77,16 @@ func SetChatRoute(router gin.IRouter, chat *Api, mw *chatmw.MW) {
 	post.POST("/publish", chat.PublishPost)
 	post.POST("/like", chat.ChangeLikePost)
 	post.POST("/collect", chat.ChangeCollectPost)
-	post.DELETE("/:postID", chat.DeletePost)
+	post.POST("/forward", chat.ForwardPost)
+	post.POST("/comment", chat.CommentPost)
+	post.POST("/pin", chat.PinPost)
+	post.POST("/reference", chat.ReferencePost)
+	post.POST("/delete", chat.DeletePost)
 	post.POST("/:postID", chat.GetPostByID)
-	post.POST("/list_by_user", chat.GetPostPaginationByUser)
-	post.POST("/list", chat.GetPostPagination)
+	post.POST("/list_by_user", chat.GetPostListByUser)
+	post.POST("/list", chat.GetPostList)
+	post.POST("/list_all_type", chat.GetAllTypePost)
+	post.POST("/comment_list", chat.GetCommentPostListByPostID)
 	post.POST("/change_allow_comment", chat.ChangeAllowCommentPost)
 	post.POST("/change_allow_forward", chat.ChangeAllowForwardPost)
 

@@ -16,53 +16,116 @@ package dbutil
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+	"strconv"
+	"time"
 
-	"github.com/openimsdk/tools/db/mongoutil"
-	"github.com/openimsdk/tools/db/pagination"
 	"github.com/openimsdk/tools/errs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func IsDBNotFound(err error) bool {
 	return errs.Unwrap(err) == mongo.ErrNoDocuments
 }
 
-func FindPageWithAggregation[T any](ctx context.Context, coll *mongo.Collection, filter any, pagination pagination.Pagination, pipeline mongo.Pipeline, opts ...*options.AggregateOptions) (int64, []T, error) {
-	count, err := mongoutil.Count(ctx, coll, filter, options.Count())
-	if err != nil {
-		return 0, nil, errs.WrapMsg(err, "mongo failed to count documents in collection")
+func FindPageWithCursor[T any](ctx context.Context, coll *mongo.Collection, cursor int64, cursorField string, sortDirection int32, limit int64, filter bson.M, sort bson.D, pipeline mongo.Pipeline) ([]T, string, error) {
+
+	var _pipeline []bson.D
+
+	// 添加过滤条件
+	if filter != nil {
+		_pipeline = append(_pipeline, bson.D{{Key: "$match", Value: filter}})
 	}
 
-	// 如果没有文档或者分页参数无效，直接返回
-	if count == 0 || pagination == nil {
-		return count, nil, nil
+	// 添加游标条件
+	if cursor != 0 {
+		var comparisonOperator string
+		if sortDirection >= 0 {
+			comparisonOperator = "$gt"
+		} else {
+			comparisonOperator = "$lt"
+		}
+		cursorTime := time.Unix(0, cursor*int64(time.Millisecond))
+		_pipeline = append(_pipeline, bson.D{{Key: "$match", Value: bson.M{cursorField: bson.M{comparisonOperator: cursorTime}}}})
 	}
 
-	// 计算分页的 skip 和 limit
-	skip := int64(pagination.GetPageNumber()-1) * int64(pagination.GetShowNumber())
-	if skip < 0 || skip >= count || pagination.GetShowNumber() <= 0 {
-		return count, nil, nil
-	}
+	_pipeline = append(_pipeline, pipeline...)
 
-	pipeline = append(pipeline,
-		bson.D{{Key: "$skip", Value: skip}},                        // 跳过指定数量的文档
-		bson.D{{Key: "$limit", Value: pagination.GetShowNumber()}}, // 限制返回文档的数量
+	_pipeline = append(_pipeline,
+		bson.D{{Key: "$sort", Value: sort}},
+		bson.D{{Key: "$limit", Value: limit}},
 	)
 
 	// 执行聚合查询
-	cursor, err := coll.Aggregate(ctx, pipeline, opts...)
+	cur, err := coll.Aggregate(ctx, _pipeline)
 	if err != nil {
-		return 0, nil, err
+		return nil, "", errs.WrapMsg(err, "mongo failed to execute aggregation")
 	}
-	defer cursor.Close(ctx)
+	defer cur.Close(ctx)
 
-	// 解析聚合结果
 	var results []T
-	if err := cursor.All(ctx, &results); err != nil {
-		return 0, nil, err
+	if err := cur.All(ctx, &results); err != nil {
+		return nil, "", errs.WrapMsg(err, "mongo failed to decode aggregation results")
 	}
 
-	return count, results, nil
+	// 获取下一个游标
+	var nextCursor string
+	if len(results) > 0 {
+		lastResult := results[len(results)-1]
+		nextCursor, err = getFieldValue(lastResult, cursorField)
+		if err != nil {
+			return nil, "", errs.WrapMsg(err, "failed to get next cursor")
+		}
+	}
+
+	return results, nextCursor, nil
+}
+func getFieldValue(v interface{}, field string) (string, error) {
+	r := reflect.ValueOf(v)
+	if r.Kind() == reflect.Ptr {
+		r = r.Elem()
+	}
+	if r.Kind() != reflect.Struct {
+		return "", fmt.Errorf("v must be a struct or pointer to struct")
+	}
+
+	f := r.FieldByName(field)
+	if !f.IsValid() {
+		return "", fmt.Errorf("no such field: %s in obj", field)
+	}
+
+	switch f.Kind() {
+	case reflect.String:
+		return f.String(), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(f.Int(), 10), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(f.Uint(), 10), nil
+	case reflect.Float32, reflect.Float64:
+		return strconv.FormatFloat(f.Float(), 'f', -1, 64), nil
+	case reflect.Bool:
+		return strconv.FormatBool(f.Bool()), nil
+	case reflect.Struct:
+		// Handle common MongoDB types
+		if f.Type().String() == "primitive.ObjectID" {
+			// Use String() method if available
+			if strMethod := f.MethodByName("String"); strMethod.IsValid() {
+				return strMethod.Call(nil)[0].String(), nil
+			}
+		}
+		// Handle time.Time
+		if f.Type().String() == "time.Time" {
+			t := f.Interface().(time.Time)
+			if t.IsZero() {
+				return "0", nil
+			}
+			return strconv.FormatInt(t.UnixMilli(), 10), nil
+		}
+		// Convert the struct to a string representation
+		return fmt.Sprintf("%v", f.Interface()), nil
+	default:
+		return "", fmt.Errorf("unsupported field type: %v", f.Kind())
+	}
 }
